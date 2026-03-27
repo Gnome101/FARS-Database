@@ -1,0 +1,128 @@
+-- ============================================================
+-- DDL: Create all tables (drop first for clean re-runs)
+-- ============================================================
+
+DROP TABLE IF EXISTS Involves CASCADE;
+DROP TABLE IF EXISTS Rides_In CASCADE;
+DROP TABLE IF EXISTS Driver CASCADE;
+DROP TABLE IF EXISTS Passenger CASCADE;
+DROP TABLE IF EXISTS CarPerson CASCADE;
+DROP TABLE IF EXISTS Pedestrian CASCADE;
+DROP TABLE IF EXISTS Person CASCADE;
+DROP TABLE IF EXISTS Vehicle CASCADE;
+DROP TABLE IF EXISTS Crash CASCADE;
+DROP TABLE IF EXISTS Location CASCADE;
+
+CREATE TABLE Location (
+    LATITUDE    NUMERIC NOT NULL,
+    LONGITUDE   NUMERIC NOT NULL,
+    COUNTY      INT,
+    CITY        INT,
+    STATE       INT,
+    TYP_INT     INT,
+    REL_ROAD    INT,
+    ROUTE       INT,
+    PRIMARY KEY (LATITUDE, LONGITUDE)
+);
+
+CREATE TABLE Crash (
+    ST_CASE     INT PRIMARY KEY,
+    PEDS        INT,
+    PERSONS     INT,
+    DAY         INT,
+    MONTH       INT,
+    YEAR        INT,
+    NOT_HOUR    INT,
+    ARR_HOUR    INT,
+    VE_TOTAL    INT,
+    ARR_MIN     INT,
+    MAN_COLL    INT,
+    NOT_MIN     INT,
+    FATALS      INT,
+    LATITUDE    NUMERIC,
+    LONGITUDE   NUMERIC,
+    WEATHER     INT,
+    LGT_COND    INT,
+    WRK_ZONE    INT,
+    FOREIGN KEY (LATITUDE, LONGITUDE) REFERENCES Location(LATITUDE, LONGITUDE)
+);
+
+CREATE TABLE Vehicle (
+    VIN         VARCHAR(17) PRIMARY KEY,
+    VEH_NO      INT,
+    MOD_YEAR    INT,
+    MAKE        INT,
+    BODY_TYP    INT,
+    UNITTYPE    INT
+);
+
+CREATE TABLE Person (
+    ST_CASE     INT NOT NULL,
+    PER_NO      INT NOT NULL,
+    AGE         INT,
+    SEX         INT,
+    INJ_SEV     INT,
+    HOSPITAL    INT,
+    DOA         INT,
+    PRIMARY KEY (PER_NO, ST_CASE),
+    FOREIGN KEY (ST_CASE) REFERENCES Crash(ST_CASE) ON DELETE CASCADE
+);
+
+CREATE TABLE Pedestrian (
+    PER_NO      INT NOT NULL,
+    ST_CASE     INT NOT NULL,
+    PRIMARY KEY (PER_NO, ST_CASE),
+    FOREIGN KEY (PER_NO, ST_CASE) REFERENCES Person(PER_NO, ST_CASE) ON DELETE CASCADE
+);
+
+CREATE TABLE CarPerson (
+    PER_NO      INT NOT NULL,
+    ST_CASE     INT NOT NULL,
+    EJECTION    INT,
+    SEAT_POS    INT,
+    REST_USE    INT,
+    PRIMARY KEY (PER_NO, ST_CASE),
+    FOREIGN KEY (PER_NO, ST_CASE) REFERENCES Person(PER_NO, ST_CASE) ON DELETE CASCADE
+);
+
+CREATE TABLE Passenger (
+    PER_NO      INT NOT NULL,
+    ST_CASE     INT NOT NULL,
+    PRIMARY KEY (PER_NO, ST_CASE),
+    FOREIGN KEY (PER_NO, ST_CASE) REFERENCES CarPerson(PER_NO, ST_CASE) ON DELETE CASCADE
+);
+
+CREATE TABLE Driver (
+    PER_NO      INT NOT NULL,
+    ST_CASE     INT NOT NULL,
+    DRINKING    INT,
+    DRUGS       INT,
+    PRIMARY KEY (PER_NO, ST_CASE),
+    FOREIGN KEY (PER_NO, ST_CASE) REFERENCES CarPerson(PER_NO, ST_CASE) ON DELETE CASCADE
+);
+
+CREATE TABLE Rides_In (
+    PER_NO      INT NOT NULL,
+    ST_CASE     INT NOT NULL,
+    VIN         VARCHAR(17),
+    PRIMARY KEY (PER_NO, ST_CASE),
+    FOREIGN KEY (PER_NO, ST_CASE) REFERENCES Person(PER_NO, ST_CASE) ON DELETE CASCADE,
+    FOREIGN KEY (VIN) REFERENCES Vehicle(VIN)
+);
+
+CREATE TABLE Involves (
+    ST_CASE     INT NOT NULL,
+    VIN         VARCHAR(17) NOT NULL,
+    NUMOCCS     INT,
+    ROLLOVER    INT,
+    TRAV_SP     INT,
+    IMPACT1     INT,
+    HIT_RUN     INT,
+    FIRE_EXP    INT,
+    TOWED       INT,
+    DEFORMED    INT,
+    VSPD_LIM    INT,
+    PRIMARY KEY (ST_CASE, VIN),
+    FOREIGN KEY (ST_CASE) REFERENCES Crash(ST_CASE),
+    FOREIGN KEY (VIN) REFERENCES Vehicle(VIN)
+);
